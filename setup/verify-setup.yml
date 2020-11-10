@@ -1,0 +1,103 @@
+apiVersion: v1
+kind: Pod
+metadata:
+  name: foo-pod
+  labels:
+    app: foo-app
+spec:
+  containers:
+  - name: nginx-foo-container
+    image: nginx
+    ports:
+    - containerPort: 80
+    volumeMounts:
+    - name: workdir
+      mountPath: /usr/share/nginx/html
+  # These containers are run during pod initialization
+  initContainers:
+  - name: install
+    image: busybox
+    command: ["/bin/sh", "-c", "echo '<h1> Wlecome to <span style=\"color:#005588\">FOO</span></h1>' > /work-dir/index.html"]
+    volumeMounts:
+    - name: workdir
+      mountPath: "/work-dir"
+  dnsPolicy: Default
+  volumes:
+  - name: workdir
+    emptyDir: {}
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: foo-service
+spec:
+  selector:
+    app: foo-app
+  ports:
+  - protocol: TCP
+    port: 80
+---
+apiVersion: v1
+kind: Pod
+metadata:
+  name: bar-pod
+  labels:
+    app: bar-app
+spec:
+  containers:
+  - name: nginx-bar-container
+    image: nginx
+    ports:
+    - containerPort: 80
+    volumeMounts:
+    - name: workdir
+      mountPath: /usr/share/nginx/html
+  # These containers are run during pod initialization
+  initContainers:
+  - name: install
+    image: busybox
+    command: ["/bin/sh", "-c", "echo '<h1>Welcom to <span style=\"color:#008800\">BAR</span></h1>' > /work-dir/index.html"]
+    volumeMounts:
+    - name: workdir
+      mountPath: "/work-dir"
+  dnsPolicy: Default
+  volumes:
+  - name: workdir
+    emptyDir: {}
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: bar-service
+spec:
+  selector:
+    app: bar-app
+  ports:
+  - protocol: TCP
+    port: 80
+---
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  name: app-nginx-ingress
+  annotations:
+    nginx.ingress.kubernetes.io/rewrite-target: /  # Required for path based routing
+spec:
+  rules:
+    - host: localhost.kube
+      http:
+        paths:
+        - path: /foo
+          pathType: Prefix
+          backend:
+            service:
+              name: foo-service
+              port:
+                number: 80
+        - path: /bar
+          pathType: Prefix
+          backend:
+            service:
+              name: bar-service
+              port:
+                number: 80
