@@ -1,0 +1,48 @@
+apiVersion: tekton.dev/v1beta1
+kind: Task
+metadata:
+  name: hello-begin-task
+spec:
+  steps:
+  - name: hello
+    image: busybox
+    command:
+    - echo
+    args:
+    - "hello tekton!!"
+  - name: working
+    image: busybox
+    script: |
+      #!/bin/sh
+      for i in `seq 1 10`;do  sleep 1;  echo "[${i}] working..."; done;
+---
+apiVersion: tekton.dev/v1beta1
+kind: Task
+metadata:
+  name: hello-end-task
+spec:
+  steps:
+  - name: goodbye
+    image: busybox
+    command:
+    - echo
+    args:
+    - "bye tekton!!"
+---
+apiVersion: tekton.dev/v1beta1
+kind: Pipeline
+metadata:
+  name: hello-pipeline
+spec:
+  tasks:
+  - name: hello
+    taskRef:
+      name: hello-begin-task
+  - name: goodbye
+    runAfter:
+      - hello
+    taskRef:
+      name: hello-end-task
+
+    
+
