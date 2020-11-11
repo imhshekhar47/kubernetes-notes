@@ -19,3 +19,6 @@
     <li>Deploymemt</li>
     <li>StatefulSet</li>
 </ol>
+
+## Setup
+[How to setup a local kubernetes cluster using kind.](./setup/README.md)

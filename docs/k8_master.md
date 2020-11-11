@@ -1,19 +1,20 @@
 # K8 Master
 
-### Api Server
+## Api Server
 - Gateway to kubernates cluster
 - Gatekeeper, Authentication
 
 
-### Scheduer
+## Scheduer
 - Intelligence to determine on which node the next pod will be launch
 
 
-### Controller Manager
+## Controller Manager
 - Detects changes in the states of pods and restart/relauches the pods.
 
-### etcd
+
+## Etcd / Key-Value Store
 - Key Value store
-- Brain for cluster
+- Brain for k8 cluster
 - maintains the state of cluster in real-time
 

@@ -1,18 +1,53 @@
 # Setup
 
-We will be using kind to create a multinode cluster locally on a Linux systsem.
+We will be using kind to create a multinode cluster locally on a Linux system.
 
 ## Install KinD
 [kind](https://kind.sigs.k8s.io/) is a tool for running local Kubernetes clusters using Docker container “nodes”.
 
-
-## 1. Setup multinode cluster
+## 1. Setup a multinode cluster
 ```bash
 kind create cluster --name kind --config ./multinode-cluster.yml
 ```
 
+### Dashboard
+```bash
+kubectl apply -f https://raw.githubusercontent.com/kubernetes/dashboard/v2.0.0/aio/deploy/recommended.yaml
+```
+
+Then lauch the [dashboard](http://localhost:8001/api/v1/namespaces/kubernetes-dashboard/services/https:kubernetes-dashboard:/proxy/) in the browser. 
+To login into dashboard, put the secret token. This has limited access and by design.
+
+To create an admin user
+```bash
+cat <<EOF | kubectl apply -f -
+apiVersion: v1
+kind: ServiceAccount
+metadata:
+  name: admin-user
+  namespace: kubernetes-dashboard
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: ClusterRoleBinding
+metadata:
+  name: admin-user
+roleRef:
+  apiGroup: rbac.authorization.k8s.io
+  kind: ClusterRole
+  name: cluster-admin
+subjects:
+- kind: ServiceAccount
+  name: admin-user
+  namespace: kubernetes-dashboard
+EOF
+```
+Now you cab use the admin-user token for admin level access.
+
 ## 2. Setup metallb
 [MetalLB](https://metallb.universe.tf/) is a load-balancer implementation for bare metal Kubernetes clusters, using standard routing protocols.
+
+**Note:** This setup is optional and only needed if you want to create a `LoadBalancer` service or going to use `Ingress Controller`.
+
 ### 2.1 Create metallb resources
 ```bash
 kubectl apply -f https://raw.githubusercontent.com/metallb/metallb/v0.9.4/manifests/namespace.yaml
@@ -55,10 +90,13 @@ EOF
 We are done. Now you can have loadbalancers in your clusters
 
 ## 3. Ingress setup (Nginx)
-You must have helm installed for this.
+**Prerequisites**
+- You must have metallb setup
+- You must have helm installed.
+
 ```bash
 helm repo add ingress-nginx https://kubernetes.github.io/ingress-nginx
-helm install ingress-nginx/ingress-nginx --name my-nginx set rbac.create=true
+helm install my-nginx ingress-nginx/ingress-nginx
 ```
 Now upon `kubectl get services` you should see 
 ```bash
